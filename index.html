@@ -9,6 +9,7 @@
   <style>
     html, body { height: 100%; margin: 0; }
     #map { height: 100vh; width: 100%; }
+
     .legend {
       background: #fff;
       padding: 8px 10px;
@@ -17,17 +18,53 @@
       border-radius: 6px;
       box-shadow: 0 0 12px rgba(0,0,0,.15);
     }
+
     /* Icônes Leaflet propres */
     .leaflet-div-icon { background: transparent; border: none; user-select: none; }
-    /* Traits fins, nets, non "boudinés" au zoom */
     .icon-swords svg, .icon-cross svg { display:block; }
     .icon-swords path,
     .icon-cross path, .icon-cross rect {
       vector-effect: non-scaling-stroke;
       shape-rendering: geometricPrecision;
     }
-    /* Forcer l'SVG de la croix à occuper 100% de l'icône (18x18) */
-    .icon-cross svg { width: 100%; height: 100%; }
+
+    /* ===== Barre de menus / icônes communes ===== */
+    .communes-control {
+      background:#fff;
+      padding:10px;
+      border-radius:8px;
+      box-shadow:0 0 12px rgba(0,0,0,.15);
+      font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      max-width: 420px;
+    }
+    .communes-control .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .communes-control .row + .row { margin-top:8px; }
+    .communes-control select {
+      flex:1 1 auto; min-width:220px;
+      padding:6px 8px; border:1px solid #ddd; border-radius:6px;
+      background:#fff;
+    }
+    .pillbar {
+      display:flex; gap:6px; overflow:auto; padding-bottom:2px; max-width:400px;
+    }
+    .pillbar::-webkit-scrollbar { height:6px; }
+    .pill {
+      flex:0 0 auto;
+      padding:6px 10px;
+      border:1px solid #d0d7de;
+      border-radius:999px;
+      background:#f6f8fa;
+      cursor:pointer;
+      white-space:nowrap;
+      transition:background .15s, transform .05s;
+      user-select:none;
+    }
+    .pill:hover { background:#eef2f6; }
+    .pill:active { transform:translateY(1px); }
+    .btn {
+      padding:6px 10px; border:1px solid #d0d7de; border-radius:6px; background:#fff; cursor:pointer;
+    }
+    .btn:hover { background:#f3f4f6; }
   </style>
 </head>
 <body>
@@ -44,60 +81,76 @@
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // --------- Icônes SVG embarquées (aucune ressource externe) ----------
-    // Croix (réduite visuellement — on fixera la taille via iconSize)
+    // --------- Icônes SVG (on garde TES icônes) ----------
     const svgCross = `
-      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M10 2h4v6h6v4h-6v10h-4V12H4V8h6z" fill="#c1121f"/>
         <rect x="9.5" y="1.5" width="5" height="21" fill="none" stroke="#7a0a12" stroke-width="1"/>
         <rect x="1.5" y="7.5" width="21" height="5" fill="none" stroke="#7a0a12" stroke-width="1"/>
       </svg>`;
-
-    // Épées (traits fins + vector-effect)
     const svgSwords = `
-      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none">
-        <g stroke="#0b2545" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <!-- lame gauche -->
-          <path d="M4 5 L12 13" vector-effect="non-scaling-stroke"/>
-          <!-- garde/poignée gauche -->
-          <path d="M7 4 L4 7 L7 10 L10 7 Z" vector-effect="non-scaling-stroke"/>
-          <!-- lame droite -->
-          <path d="M20 5 L12 13" vector-effect="non-scaling-stroke"/>
-          <!-- garde/poignée droite -->
-          <path d="M17 4 L20 7 L17 10 L14 7 Z" vector-effect="non-scaling-stroke"/>
+      <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
+        <g stroke="#0b2545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path d="M4 5l7 7" />
+          <path d="M20 5l-7 7" />
+          <path d="M3 7l3-3" />
+          <path d="M21 7l-3-3" />
+          <path d="M7 9l-2 2" />
+          <path d="M17 9l2 2" />
         </g>
       </svg>`;
 
-    // --------- Création des icônes ----------
-    const iconCross  = L.divIcon({
-      className: 'icon-cross',
-      html: svgCross,
-      iconSize: [18, 18],     // ⇦ croix plus petite
-      iconAnchor: [9, 18],    // base au "sol"
-      popupAnchor: [0, -16]
-    });
-
-    const iconSwords = L.divIcon({
-      className: 'icon-swords',
-      html: svgSwords,
-      iconSize: [24, 24],
-      iconAnchor: [12, 24],
-      popupAnchor: [0, -22]
-    });
-
-    const iconDot = L.divIcon({
-      className: 'icon-dot',
-      html: '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6" fill="#222"/></svg>',
-      iconSize: [20, 20],
-      iconAnchor: [10, 20],
-      popupAnchor: [0, -18]
-    });
+    const iconCross  = L.divIcon({ className: 'icon-cross',  html: svgCross,  iconSize: [26,26], iconAnchor: [13,26], popupAnchor: [0,-22] });
+    const iconSwords = L.divIcon({ className: 'icon-swords', html: svgSwords, iconSize: [28,28], iconAnchor: [14,28], popupAnchor: [0,-24] });
+    const iconDot    = L.divIcon({ className: 'icon-dot',    html: '<svg width="20" height="20"><circle cx="10" cy="10" r="6" fill="#222"/></svg>', iconSize: [20,20], iconAnchor: [10,20], popupAnchor: [0,-18] });
 
     function getIcon(categorie = "") {
       const c = (categorie || "").toLowerCase();
       if (c.includes("exécution") || c.includes("victime")) return iconCross;   // ✝️
       if (c.includes("combat")) return iconSwords;                               // ⚔️
       return iconDot;                                                            // défaut
+    }
+
+    // --------- Index des communes & marqueurs ----------
+    const allMarkers = [];
+    const communeIndex = new Map(); // "Commune" -> { markers:[], bounds:L.LatLngBounds }
+
+    function addToCommuneIndex(commune, marker) {
+      const key = (commune || "").trim();
+      if (!key) return;
+      let entry = communeIndex.get(key);
+      if (!entry) {
+        entry = { markers: [], bounds: null };
+        communeIndex.set(key, entry);
+      }
+      entry.markers.push(marker);
+      const mlatlng = marker.getLatLng();
+      entry.bounds = entry.bounds ? entry.bounds.extend(mlatlng) : L.latLngBounds(mlatlng, mlatlng);
+    }
+
+    function zoomToCommune(name) {
+      const key = (name || "").trim();
+      if (!communeIndex.has(key)) return;
+      const entry = communeIndex.get(key);
+      if (entry.bounds) {
+        const b = entry.bounds;
+        // Si un seul point, zoome un peu plus
+        if (entry.markers.length === 1) {
+          map.setView(b.getCenter(), 15, { animate: true });
+        } else {
+          map.fitBounds(b.pad(0.25), { animate: true });
+        }
+      }
+      // met à jour le hash URL (partage facile)
+      location.hash = "commune=" + encodeURIComponent(key);
+    }
+
+    function zoomAll() {
+      if (allMarkers.length) {
+        const allBounds = L.featureGroup(allMarkers).getBounds();
+        map.fitBounds(allBounds.pad(0.2), { animate: true });
+      }
+      location.hash = "";
     }
 
     // --------- Chargement CSV ----------
@@ -109,7 +162,7 @@
         console.log("Lignes lues :", data.length);
 
         data.forEach(row => {
-          // En-têtes attendues (avec accents) :
+          // En-têtes attendues :
           // Commune;Lieu;Date;Catégorie;Victimes;Coordonnées;Source
           const coordsRaw = row["Coordonnées"];
           if (!coordsRaw) return;
@@ -132,10 +185,18 @@
             Source : ${row["Source"] || "—"}
           `;
 
-          L.marker([lat, lng], { icon: getIcon(row["Catégorie"]) })
+          const marker = L.marker([lat, lng], { icon: getIcon(row["Catégorie"]) })
             .addTo(map)
             .bindPopup(popup);
+
+          allMarkers.push(marker);
+          addToCommuneIndex(row["Commune"], marker);
         });
+
+        buildCommunesControl();
+        // Si URL contient #commune=..., zoom automatique
+        const match = location.hash.match(/commune=([^&]+)/i);
+        if (match) zoomToCommune(decodeURIComponent(match[1]));
       },
       error: (err) => console.error("Erreur PapaParse:", err)
     });
@@ -154,6 +215,77 @@
       return div;
     };
     legend.addTo(map);
+
+    // --------- Contrôle "Communes" (menu + boutons rapides) ----------
+    function buildCommunesControl() {
+      // Liste triée des communes
+      const communes = Array.from(communeIndex.keys()).sort((a,b) =>
+        a.localeCompare(b, 'fr', { sensitivity:'base' })
+      );
+
+      // Compter pour "boutons rapides" (top 8)
+      const counts = communes.map(name => ({ name, n: communeIndex.get(name).markers.length }));
+      counts.sort((a,b) => b.n - a.n);
+      const top = counts.slice(0, 8).map(x => x.name);
+
+      const Control = L.Control.extend({
+        options: { position: 'topleft' },
+        onAdd: function() {
+          const container = L.DomUtil.create('div', 'communes-control');
+          container.innerHTML = `
+            <div class="row">
+              <strong>Communes</strong>
+              <button class="btn" type="button" data-action="zoom-all" title="Revenir à l’ensemble">Tout voir</button>
+            </div>
+            <div class="row">
+              <select id="communeSelect">
+                <option value="">— Aller à une commune —</option>
+                ${communes.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="row">
+              <div class="pillbar" id="pillbar">
+                ${top.map(n => `<button class="pill" type="button" data-commune="${escapeHtml(n)}">${escapeHtml(n)}</button>`).join('')}
+              </div>
+            </div>
+          `;
+
+          // Empêche la carte de capter le scroll/clic quand on interagit avec le contrôle
+          L.DomEvent.disableClickPropagation(container);
+          L.DomEvent.disableScrollPropagation(container);
+
+          // Événements
+          const select = container.querySelector('#communeSelect');
+          select.addEventListener('change', e => {
+            const name = e.target.value;
+            if (name) zoomToCommune(name);
+          });
+
+          const pillbar = container.querySelector('#pillbar');
+          pillbar.addEventListener('click', e => {
+            const btn = e.target.closest('button.pill');
+            if (!btn) return;
+            zoomToCommune(btn.dataset.commune);
+          });
+
+          const btnAll = container.querySelector('[data-action="zoom-all"]');
+          btnAll.addEventListener('click', zoomAll);
+
+          return container;
+        }
+      });
+
+      map.addControl(new Control());
+    }
+
+    function escapeHtml(s='') {
+      return String(s)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'",'&#039;');
+    }
   </script>
 </body>
 </html>
