@@ -28,20 +28,29 @@
       shape-rendering: geometricPrecision;
     }
 
-    /* Panneau Communes (liste seule) */
-    .ui-panel {
-      background:#fff;
-      padding:10px;
-      border-radius:8px;
-      box-shadow:0 0 12px rgba(0,0,0,.15);
-      font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      max-width: 460px;
+    /* Met le zoom (+/–) et notre sélecteur sur la même ligne (coin haut-gauche) */
+    .leaflet-top.leaflet-left {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      flex-wrap: wrap; /* au cas où, sur petits écrans */
     }
-    .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .row + .row { margin-top:8px; }
-    .ui-panel select {
-      padding:6px 8px; border:1px solid #ddd; border-radius:6px; background:#fff;
-      flex:1 1 auto; min-width:220px;
+
+    /* Style compact pour la liste "Communes" à côté du zoom */
+    .communes-inline {
+      background: #fff;
+      padding: 4px 6px;
+      border-radius: 6px;
+      box-shadow: 0 1px 5px rgba(0,0,0,.3);
+      font: 13px/1.3 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      max-width: 260px;
+    }
+    .communes-inline select {
+      border: 1px solid #d0d7de;
+      border-radius: 4px;
+      padding: 4px 6px;
+      background: #fff;
+      max-width: 100%;
     }
   </style>
   <!-- évite le 404 favicon en local -->
@@ -173,7 +182,7 @@
           addToCommuneIndex(row["Commune"], marker);
         });
 
-        buildCommunesControl();   // liste déroulante Communes
+        buildCommunesControl();   // liste déroulante à côté du zoom
 
         // Hash URL
         const h = parseHash();
@@ -197,7 +206,7 @@
     };
     legend.addTo(map);
 
-    // ============ Contrôle "Communes" ============
+    // ============ Contrôle "Communes" (inline, à côté du zoom) ============
     function buildCommunesControl() {
       const communes = Array.from(communeIndex.keys())
         .sort((a,b) => a.localeCompare(b, 'fr', { sensitivity:'base' }));
@@ -205,15 +214,13 @@
       const CommunesControl = L.Control.extend({
         options: { position: 'topleft' },
         onAdd: function() {
-          const c = L.DomUtil.create('div', 'ui-panel');
+          const c = L.DomUtil.create('div', 'communes-inline');
           c.innerHTML = `
-            <div class="row">
-              <label for="communeSelect"><strong>Communes</strong></label>
-              <select id="communeSelect">
-                <option value="">— Tout voir —</option>
-                ${communes.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')}
-              </select>
-            </div>
+            <label for="communeSelect" class="sr-only" style="position:absolute;left:-9999px;">Communes</label>
+            <select id="communeSelect" aria-label="Communes">
+              <option value="">— Tout voir —</option>
+              ${communes.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')}
+            </select>
           `;
           L.DomEvent.disableClickPropagation(c);
           L.DomEvent.disableScrollPropagation(c);
