@@ -47,28 +47,26 @@
     }).addTo(map);
 
     // --- Icônes
-    function getIcon(categorie = "") {
-      const c = categorie.toLowerCase();
-      if (c.includes("exécution") || c.includes("victime")) {
-        // ✝️ croix rouge (victimes)
-        return L.icon({
-          iconUrl: "https://cdn-icons-png.flaticon.com/512/1822/1822890.png",
-          iconSize: [22, 22]
-        });
-      }
-      if (c.includes("combat")) {
-        // ⚔️ épées (combats)
-        return L.icon({
-          iconUrl: "https://cdn-icons-png.flaticon.com/512/1076/1076877.png",
-          iconSize: [28, 28]
-        });
-      }
-      // défaut
-      return L.icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/32/32339.png",
-        iconSize: [20, 20]
-      });
-    }
+function getIcon(categorie = "") {
+  const c = categorie.toLowerCase();
+  if (c.includes("exécution") || c.includes("victime")) {
+    return L.icon({
+      iconUrl: "https://cdn-icons-png.flaticon.com/512/535/535234.png",
+      iconSize: [28, 28]
+    });
+  }
+  if (c.includes("combat")) {
+    return L.icon({
+      iconUrl: "https://cdn-icons-png.flaticon.com/512/1076/1076877.png",
+      iconSize: [28, 28]
+    });
+  }
+  // défaut
+  return L.icon({
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/32/32339.png",
+    iconSize: [20, 20]
+  });
+}
 
     // --- Lecture CSV (data/victimes.csv)
     Papa.parse("data/victimes.csv?cb=" + Date.now(), {
