@@ -1,112 +1,123 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
   <title>Carte – Août 1944</title>
+
+  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    #map { height: 100vh; }
+    html, body { height: 100%; margin: 0; }
+    #map { height: 100vh; width: 100%; }
     .legend {
-      background: white;
-      padding: 8px;
-      line-height: 1.4em;
-      font-size: 14px;
+      background: #fff;
+      padding: 8px 10px;
+      line-height: 1.4;
+      font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      border-radius: 6px;
+      box-shadow: 0 0 12px rgba(0,0,0,.15);
     }
+    /* Supprime l'effet de sélection de texte sur les icônes */
+    .leaflet-div-icon { background: transparent; border: none; }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script>
-    // Initialisation de la carte
-    const map = L.map('map').setView([45.05, 5.83], 11);
+  <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
 
-    // Fond de carte
+  <script>
+    // --------- Carte ----------
+    const map = L.map('map').setView([45.05, 5.83], 11);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // Choix des icônes
+    // --------- Icônes SVG embarquées (aucune ressource externe) ----------
+    const svgCross = `
+      <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M10 2h4v6h6v4h-6v10h-4V12H4V8h6z" fill="#c1121f"/>
+        <rect x="9.5" y="1.5" width="5" height="21" fill="none" stroke="#7a0a12" stroke-width="1"/>
+        <rect x="1.5" y="7.5" width="21" height="5" fill="none" stroke="#7a0a12" stroke-width="1"/>
+      </svg>`;
+    const svgSwords = `
+      <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
+        <g stroke="#0b2545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <!-- lames -->
+          <path d="M4 5l7 7" />
+          <path d="M20 5l-7 7" />
+          <!-- poignées -->
+          <path d="M3 7l3-3" />
+          <path d="M21 7l-3-3" />
+          <!-- gardes -->
+          <path d="M7 9l-2 2" />
+          <path d="M17 9l2 2" />
+        </g>
+      </svg>`;
+
+    const iconCross = L.divIcon({ className: 'icon-cross', html: svgCross, iconSize: [26,26], iconAnchor: [13,26], popupAnchor: [0,-22] });
+    const iconSwords = L.divIcon({ className: 'icon-swords', html: svgSwords, iconSize: [28,28], iconAnchor: [14,28], popupAnchor: [0,-24] });
+    const iconDot = L.divIcon({ className: 'icon-dot', html: '<svg width="20" height="20"><circle cx="10" cy="10" r="6" fill="#222"/></svg>', iconSize: [20,20], iconAnchor: [10,20], popupAnchor: [0,-18] });
+
     function getIcon(categorie = "") {
-      const c = categorie.toLowerCase();
-
-      if (c.includes("exécution") || c.includes("victime")) {
-        return L.icon({
-          iconUrl: "https://cdn-icons-png.flaticon.com/512/1828/1828743.png", // ✝️ croix
-          iconSize: [26, 26],
-          iconAnchor: [13, 26],
-          popupAnchor: [0, -26]
-        });
-      }
-
-      if (c.includes("combat")) {
-        return L.icon({
-          iconUrl: "https://cdn-icons-png.flaticon.com/512/1973/1973806.png", // ⚔️ épées croisées
-          iconSize: [28, 28],
-          iconAnchor: [14, 28],
-          popupAnchor: [0, -28]
-        });
-      }
-
-      // défaut
-      return L.icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/565/565547.png", // • point noir
-        iconSize: [20, 20],
-        iconAnchor: [10, 20],
-        popupAnchor: [0, -20]
-      });
+      const c = (categorie || "").toLowerCase();
+      if (c.includes("exécution") || c.includes("victime")) return iconCross;   // ✝️
+      if (c.includes("combat")) return iconSwords;                               // ⚔️
+      return iconDot;                                                            // défaut
     }
 
-    // Données minimales de test
-    const data = [
-      {
-        commune: "Vizille",
-        lieu: "Château (place)",
-        date: "1944-08-22",
-        categorie: "Combats",
-        victimes: "Henri JOURDAN; Auguste MACHOT; Alfred SOUTISON",
-        coord: [45.078, 5.773]
-      },
-      {
-        commune: "Séchilienne",
-        lieu: "Les Rivoirands",
-        date: "1944-08-22",
-        categorie: "Combats",
-        victimes: "Charles MERCIOL; Pedro MARTINEZ-ALONZO",
-        coord: [45.05575, 5.79536]
-      },
-      {
-        commune: "Livet-et-Gavet",
-        lieu: "Le Poursollet",
-        date: "1944-08-13",
-        categorie: "Combats/Exécutions",
-        victimes: "Georges ARMAND; Roger CHARIGLIONE; Jean GILLY; Moïse KOÏFMAN; Charly VALLIN; Émile PARDÉ; Pierre RIMEY-MEILLE",
-        coord: [45.044, 5.923]
-      }
-    ];
+    // --------- Chargement CSV ----------
+    Papa.parse("data/victimes.csv?cb=" + Date.now(), {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: ({data}) => {
+        console.log("Lignes lues :", data.length);
 
-    // Ajout des marqueurs
-    data.forEach(pt => {
-      const marker = L.marker(pt.coord, { icon: getIcon(pt.categorie) }).addTo(map);
-      marker.bindPopup(`
-        <b>${pt.commune}</b><br/>
-        <i>${pt.lieu}</i><br/>
-        Date : ${pt.date}<br/>
-        Catégorie : ${pt.categorie}<br/>
-        Victimes : ${pt.victimes}
-      `);
+        data.forEach(row => {
+          // En-têtes attendues (avec accents) :
+          // Commune;Lieu;Date;Catégorie;Victimes;Coordonnées;Source
+          const coordsRaw = row["Coordonnées"];
+          if (!coordsRaw) return;
+          const parts = String(coordsRaw).replace(/"/g,"").split(",");
+          if (parts.length !== 2) return;
+
+          const lat = parseFloat(parts[0]);
+          const lng = parseFloat(parts[1]);
+          if (isNaN(lat) || isNaN(lng)) {
+            console.warn("Coordonnées invalides:", coordsRaw, row);
+            return;
+          }
+
+          const popup = `
+            <b>${row["Commune"] || ""}</b><br/>
+            <i>${row["Lieu"] || ""}</i><br/>
+            📅 ${row["Date"] || ""}<br/>
+            Catégorie : ${row["Catégorie"] || ""}<br/>
+            Victimes : ${row["Victimes"] || ""}<br/>
+            Source : ${row["Source"] || "—"}
+          `;
+
+          L.marker([lat, lng], { icon: getIcon(row["Catégorie"]) })
+            .addTo(map)
+            .bindPopup(popup);
+        });
+      },
+      error: (err) => console.error("Erreur PapaParse:", err)
     });
 
-    // Légende
-    const legend = L.control({ position: "topright" });
+    // --------- Légende ----------
+    const legend = L.control({ position: "bottomright" });
     legend.onAdd = function () {
       const div = L.DomUtil.create("div", "legend");
       div.innerHTML = `
         <b>Légende</b><br/>
-        <img src="https://cdn-icons-png.flaticon.com/512/1828/1828743.png" width="18" style="vertical-align:middle"> Victimes / Exécutions<br/>
-        <img src="https://cdn-icons-png.flaticon.com/512/1973/1973806.png" width="18" style="vertical-align:middle"> Combats
+        <span style="display:inline-block;vertical-align:middle;margin-right:6px;">${svgCross}</span>
+        Victimes / Exécutions<br/>
+        <span style="display:inline-block;vertical-align:middle;margin-right:6px;">${svgSwords}</span>
+        Combats
       `;
       return div;
     };
