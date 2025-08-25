@@ -1,125 +1,71 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Carte interactive - Août 1944</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <style>
-    #map { height: 100vh; }
-    .legend {
-      background: white;
-      padding: 6px;
-      line-height: 1.4em;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-  </style>
-</head>
-<body>
-  <div id="map"></div>
+<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+<script>
+  const map = L.map('map').setView([45.05, 5.82], 11);
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
 
-  <script>
-    // Initialisation carte
-    const map = L.map('map').setView([45.05, 5.82], 11);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-
-    // Fonction choix d'icône
-    function getIcon(categorie) {
-      if (!categorie) {
-        return L.icon({
-          iconUrl: "https://cdn-icons-png.flaticon.com/512/32/32339.png",
-          iconSize: [20, 20]
-        });
-      }
-
-      if (categorie.toLowerCase().includes("exécution") || categorie.toLowerCase().includes("victime")) {
-        return L.icon({
-          iconUrl: "https://cdn-icons-png.flaticon.com/512/1822/1822890.png", // ✝️ croix rouge
-          iconSize: [22, 22]
-        });
-      }
-
-      if (categorie.toLowerCase().includes("combat")) {
-        return L.icon({
-          iconUrl: "https://cdn-icons-png.flaticon.com/512/1076/1076877.png", // ⚔️ épées
-          iconSize: [28, 28]
-        });
-      }
-
+  function getIcon(categorie) {
+    if (categorie.toLowerCase().includes("exécution") || categorie.toLowerCase().includes("victime")) {
       return L.icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/32/32339.png",
-        iconSize: [20, 20]
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/1822/1822890.png", // ✝️
+        iconSize: [22, 22]
       });
     }
-
-    // Données CSV simplifiées (⚠️ remplacer par ton CSV en fetch)
-    const data = [
-      {
-        Commune: "Vizille",
-        Lieu: "Château (place)",
-        Date: "1944-08-22",
-        Categorie: "Combats",
-        Victimes: "Henri JOURDAN; Auguste MACHOT; Alfred SOUTISON",
-        Coord: [45.078, 5.773]
-      },
-      {
-        Commune: "Séchilienne",
-        Lieu: "Les Rivoirands",
-        Date: "1944-08-22",
-        Categorie: "Combats",
-        Victimes: "Pedro MARTINEZ-ALONZO; Charles MERCIOL",
-        Coord: [45.05575, 5.79536]
-      },
-      {
-        Commune: "Vizille",
-        Lieu: "Croix du Mottet",
-        Date: "1944-08-22",
-        Categorie: "Combats",
-        Victimes: "Alpenjäger vs FFI; tirs amis corrigés; repli allemand stoppé",
-        Coord: [45.050194, 5.789038]
-      },
-      {
-        Commune: "La Morte",
-        Lieu: "Les Combaz",
-        Date: "1944-08-13",
-        Categorie: "Exécutions",
-        Victimes: "Domenico BASSANI; Pierre DI FILIPPO; Robert NICOLAS-CHARLES; Antoine PABISK; Franciszek/François JANDA; Ilvo ZANCANARO; Wladimir ZUK",
-        Coord: [45.027, 5.865]
-      }
-    ];
-
-    // Ajout des marqueurs
-    data.forEach(row => {
-      const popup = `
-        <b>${row.Commune}</b> – ${row.Lieu}<br>
-        📅 ${row.Date}<br>
-        Catégorie : ${row.Categorie}<br>
-        Victimes : ${row.Victimes}
-      `;
-
-      L.marker(row.Coord, { icon: getIcon(row.Categorie) })
-        .addTo(map)
-        .bindPopup(popup);
+    if (categorie.toLowerCase().includes("combat")) {
+      return L.icon({
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/1076/1076877.png", // ⚔️
+        iconSize: [28, 28]
+      });
+    }
+    return L.icon({
+      iconUrl: "https://cdn-icons-png.flaticon.com/512/32/32339.png",
+      iconSize: [20, 20]
     });
+  }
 
-    // Ajout légende
-    const legend = L.control({position: "bottomright"});
-    legend.onAdd = function() {
-      const div = L.DomUtil.create("div", "legend");
-      div.innerHTML = `
-        <b>Légende</b><br>
-        <img src="https://cdn-icons-png.flaticon.com/512/1822/1822890.png" width="16"> Victimes / Exécutions<br>
-        <img src="https://cdn-icons-png.flaticon.com/512/1076/1076877.png" width="16"> Combats
-      `;
-      return div;
-    };
-    legend.addTo(map);
-  </script>
-</body>
-</html>
+  // Lecture du CSV
+  Papa.parse("data/victimes.csv", {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results) {
+      results.data.forEach(row => {
+        if (!row.Coordonnées) return;
+        const coords = row.Coordonnées.replace(/"/g, '').split(",");
+        if (coords.length !== 2) return;
+
+        const lat = parseFloat(coords[0]);
+        const lng = parseFloat(coords[1]);
+        if (isNaN(lat) || isNaN(lng)) return;
+
+        const popup = `
+          <b>${row.Commune}</b> – ${row.Lieu}<br>
+          📅 ${row.Date}<br>
+          Catégorie : ${row.Catégorie}<br>
+          Victimes : ${row.Victimes}<br>
+          Source : ${row.Source || "N/A"}
+        `;
+
+        L.marker([lat, lng], { icon: getIcon(row.Catégorie) })
+          .addTo(map)
+          .bindPopup(popup);
+      });
+    }
+  });
+
+  // Légende
+  const legend = L.control({position: "bottomright"});
+  legend.onAdd = function() {
+    const div = L.DomUtil.create("div", "legend");
+    div.innerHTML = `
+      <b>Légende</b><br>
+      <img src="https://cdn-icons-png.flaticon.com/512/1822/1822890.png" width="16"> Victimes / Exécutions<br>
+      <img src="https://cdn-icons-png.flaticon.com/512/1076/1076877.png" width="16"> Combats
+    `;
+    return div;
+  };
+  legend.addTo(map);
+</script>
