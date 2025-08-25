@@ -63,6 +63,8 @@
     .btn:hover { background:#f3f4f6; }
     .muted { color:#555; font-size:12px; }
   </style>
+  <!-- (facultatif) évite le 404 favicon en local -->
+  <link rel="icon" href="data:," />
 </head>
 <body>
   <div id="map"></div>
@@ -222,6 +224,81 @@
     legend.addTo(map);
 
     // =========================
+    //  UTILITAIRES (déclarés AVANT usage)
+    // =========================
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    function toISODate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const da = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${da}`;
+    }
+    function parseISODate(iso) {
+      const m = String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!m) return null;
+      return new Date(+m[1], +m[2]-1, +m[3]);
+    }
+    function formatFR(iso) {
+      const d = parseISODate(iso);
+      return d ? d.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) : iso;
+    }
+    // Parse dates FR variées (ISO, JJ/MM/AAAA, AAAAMMJJ, "22 août 1944", etc.)
+    function parseEventDate(raw) {
+      if (!raw) return null;
+      let s = String(raw).trim();
+
+      // ISO YYYY-MM-DD / YYYY/MM/DD
+      let m = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+      if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+
+      // YYYYMMDD
+      m = s.match(/^(\d{4})(\d{2})(\d{2})$/);
+      if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+
+      // JJ/MM/AAAA ou JJ-MM-AAAA
+      m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+
+      // "22 août 1944" / "22 aout 1944"
+      const months = {
+        janvier:1, fevrier:2, février:2, mars:3, avril:4, mai:5, juin:6, juillet:7,
+        aout:8, août:8, septembre:9, octobre:10, novembre:11, decembre:12, décembre:12
+      };
+      const sNorm = s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      m = sNorm.match(/^(\d{1,2})\s+([a-z]+)\s+(\d{4})$/);
+      if (m && months[m[2]] != null) return new Date(+m[3], months[m[2]]-1, +m[1]);
+
+      return null;
+    }
+    function parseHash() {
+      const out = {};
+      const h = location.hash.replace(/^#/, '');
+      if (!h) return out;
+      const params = new URLSearchParams(h);
+      if (params.has('commune')) out.commune = decodeURIComponent(params.get('commune'));
+      if (params.has('dateFrom')) out.dateFrom = params.get('dateFrom');
+      if (params.has('dateTo'))   out.dateTo   = params.get('dateTo');
+      return out;
+    }
+    function setHash({ commune, dateFrom, dateTo }) {
+      const p = new URLSearchParams();
+      if (commune) p.set('commune', encodeURIComponent(commune));
+      if (dateFrom && dateTo) {
+        p.set('dateFrom', dateFrom);
+        p.set('dateTo',   dateTo);
+      }
+      const hash = p.toString();
+      location.hash = hash ? '#' + hash : '';
+    }
+
+    // =========================
     //  Contrôle "Communes" (gauche)
     // =========================
     function buildCommunesControl() {
@@ -289,7 +366,7 @@
       const maxD = new Date(Math.max(...dated.map(p => p.date.getTime())));
 
       const DatesControl = L.Control.extend({
-        options: { position: 'topright' },  // ⇦ ICI : à droite
+        options: { position: 'topright' },
         onAdd: function() {
           const container = L.DomUtil.create('div', 'ui-panel');
           container.innerHTML = `
@@ -384,75 +461,6 @@
       map.fitBounds(bounds.pad(0.25), { animate: true });
 
       setHash({ dateFrom: toISODate(start || inRange[0].date), dateTo: toISODate(end || inRange[inRange.length-1].date) });
-    }
-
-    // =========================
-    //  Utilitaires dates / hash
-    // =========================
-    function toISODate(d) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth()+1).padStart(2,'0');
-      const da = String(d.getDate()).padStart(2,'0');
-      return `${y}-${m}-${da}`;
-    }
-    function parseISODate(iso) {
-      const m = String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (!m) return null;
-      return new Date(+m[1], +m[2]-1, +m[3]);
-    }
-    function formatFR(iso) {
-      const d = parseISODate(iso);
-      return d ? d.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) : iso;
-    }
-
-    // Parse dates FR variées (ISO, JJ/MM/AAAA, AAAAMMJJ, "22 août 1944", etc.)
-    function parseEventDate(raw) {
-      if (!raw) return null;
-      let s = String(raw).trim();
-
-      // ISO YYYY-MM-DD / YYYY/MM/DD
-      let m = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
-      if (m) return new Date(+m[1], +m[2]-1, +m[3]);
-
-      // YYYYMMDD
-      m = s.match(/^(\d{4})(\d{2})(\d{2})$/);
-      if (m) return new Date(+m[1], +m[2]-1, +m[3]);
-
-      // JJ/MM/AAAA ou JJ-MM-AAAA
-      m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-      if (m) return new Date(+m[3], +m[2]-1, +m[1]);
-
-      // "22 août 1944" / "22 aout 1944"
-      const months = {
-        janvier:1, fevrier:2, février:2, mars:3, avril:4, mai:5, juin:6, juillet:7,
-        aout:8, août:8, septembre:9, octobre:10, novembre:11, decembre:12, décembre:12
-      };
-      const sNorm = s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      m = sNorm.match(/^(\d{1,2})\s+([a-z]+)\s+(\d{4})$/);
-      if (m && months[m[2]] != null) return new Date(+m[3], months[m[2]]-1, +m[1]);
-
-      return null;
-    }
-
-    function parseHash() {
-      const out = {};
-      const h = location.hash.replace(/^#/, '');
-      if (!h) return out;
-      const params = new URLSearchParams(h);
-      if (params.has('commune')) out.commune = decodeURIComponent(params.get('commune'));
-      if (params.has('dateFrom')) out.dateFrom = params.get('dateFrom');
-      if (params.has('dateTo'))   out.dateTo   = params.get('dateTo');
-      return out;
-    }
-    function setHash({ commune, dateFrom, dateTo }) {
-      const p = new URLSearchParams();
-      if (commune) p.set('commune', encodeURIComponent(commune));
-      if (dateFrom && dateTo) {
-        p.set('dateFrom', dateFrom);
-        p.set('dateTo',   dateTo);
-      }
-      const hash = p.toString();
-      location.hash = hash ? '#' + hash : '';
     }
   </script>
 </body>
