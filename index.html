@@ -54,6 +54,35 @@
       return rows;
     }
 
+    // --- Choix de l'icône selon la catégorie ---
+    function getIcon(categorie) {
+      if (!categorie) {
+        return L.icon({
+          iconUrl: "https://cdn-icons-png.flaticon.com/512/32/32339.png",
+          iconSize: [20, 20]
+        });
+      }
+
+      if (categorie.toLowerCase().includes("exécution") || categorie.toLowerCase().includes("victime")) {
+        return L.icon({
+          iconUrl: "https://cdn-icons-png.flaticon.com/512/484/484662.png", // cercle rouge
+          iconSize: [26, 26]
+        });
+      }
+
+      if (categorie.toLowerCase().includes("combat")) {
+        return L.icon({
+          iconUrl: "https://cdn-icons-png.flaticon.com/512/1076/1076877.png", // icône épée
+          iconSize: [28, 28]
+        });
+      }
+
+      return L.icon({
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/32/32339.png",
+        iconSize: [20, 20]
+      });
+    }
+
     // --- Lecture du CSV ---
     fetch("data/victimes.csv?cb=" + Date.now())
       .then(r => r.text())
@@ -85,7 +114,9 @@
                 Victimes : ${row.Victimes}<br>
                 Source : ${row.Source}
               `;
-              L.marker([lat, lng]).addTo(map).bindPopup(popup);
+              L.marker([lat, lng], { icon: getIcon(row.Categorie) })
+                .addTo(map)
+                .bindPopup(popup);
             } else {
               console.warn("Coordonnées invalides:", row.Coordonnees, row);
             }
