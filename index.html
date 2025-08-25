@@ -89,6 +89,10 @@
             } else {
               console.warn("Coordonnées invalides:", row.Coordonnees, row);
             }
+            data.forEach(row => {
+  console.log("Lecture ligne:", row);  // DEBUG
+  if (row.Coordonnees) {
+    ...
           }
         });
       });
