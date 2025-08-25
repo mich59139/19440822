@@ -218,7 +218,7 @@
           c.innerHTML = `
             <label for="communeSelect" class="sr-only" style="position:absolute;left:-9999px;">Communes</label>
             <select id="communeSelect" aria-label="Communes">
-              <option value="">— Tout voir —</option>
+              <option value="">— Tout voir ou Choix de la commune —</option>
               ${communes.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')}
             </select>
           `;
