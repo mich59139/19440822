@@ -1,4 +1,31 @@
 Commune;Lieu;Date;Catégorie;Victimes;Coordonnées;Source
-Vizille;Château (place);1944-08-22;Combats;"Henri JOURDAN; Auguste MACHOT; Alfred SOUTISON";"45.078,5.773";Maitron
+La Morte;Les Combaz;1944-08-13;Exécutions;"Domenico BASSANI; Pierre DI FILIPPO; Robert NICOLAS-CHARLES; Antoine PABISK; Franciszek/François JANDA (YANDA); Ilvo ZANCANARO; Wladimir ZUK";"45.027,5.865";Maitron
+La Morte;La Blache;1944-08-14;Exécutions;"Stoslaw NOWAK";"45.028,5.868";Maitron
+Livet-et-Gavet;Le Poursollet;1944-08-13;Combats/Exécutions;"Georges ARMAND; Roger CHARIGLIONE; Jean GILLY; Moïse KOÏFMAN; Charly VALLIN; Un inconnu; Émile PARDÉ (blessé puis exécuté); Pierre RIMEY-MEILLE (exécuté)";"45.044,5.923";Maitron
+Livet-et-Gavet;L’Adret;1944-08-14;Exécutions;"René BOUCHER; Roger BOUYOL; Roger GOUBET; Léonard MATHIEU";"45.052,5.919";Maitron
+Livet-et-Gavet;La Chambre d’eau;1944-08-14;Exécutions;"Eugène BOUCHET; Albert CERVI; Louis FERLET; Guerino MOCELLIN; Paul RÈCHE";"45.051,5.920";Maitron
+Livet-et-Gavet;Grand Gris;1944-08-16;Exécutions;"Un soldat indochinois non identifié";"45.055,5.918";Maitron
+Livet-et-Gavet;Fonfroide;1944-08-17;Exécutions;"Ferruccio BIGNOTTI; Henri BUGUET; Jesús DOMINGUEZ CLAVO; Gilbert GHELFI; Indalecio GOMEZ PASTOR; Joseph CONTRATTO; Louis MERLIN; Ernest ORLAREY";"45.058,5.922";Maitron
+Livet-et-Gavet;Gavet;1944-08-18;Exécutions;"Max ROBERT";"45.056,5.919";Maitron
+Livet-et-Gavet;Fonfroide;1944-08-19;Exécutions;"Nicolas ABRAMOFF; André ARCHIER; Valentin BRUN; Robert JOSSERAND; Aldo MATTIUSSI; Pierre MUZY; Marcel ROURE; Yahi SAÏD; Louis VEYRAT";"45.058,5.922";Maitron
+Rioupéroux (Livet-et-Gavet);Les Clots & Les Ponants;1944-08-16/19;Exécutions;"Jean ARRICAU; Méhédine ben Mohamed AZOUZ; Antoine BONIFASSI; Henri CARRIER; Georges DUFFAUD; Francis FERRER; Lucien HERNANDEZ; Antolin/Antoine JUAN; André PORQUET; René SUTTER";"45.058,5.900";Maitron
+Rioupéroux (Livet-et-Gavet);Commune;1944-08-22;Combats/Exécutions;"Han NGUYEN; Nhuong NGUYEN; Van Dan NGUYEN; Nguyen TRAN COC COE (prisonnier exécuté, corps jeté dans la Romanche)";"45.08790,5.89260";Maitron
+Livet-et-Gavet;Combe-Batalière;1945-11-04;Exécutions;"Un inconnu (mort en août 1944) – découverte postérieure";"45.057,5.912";Maitron
+Rioupéroux (Livet-et-Gavet);Plan Jouve (sous la Barrière);1946-05-31;Exécutions;"Marcel WALGER (mort le 14 août 1944) – découverte postérieure";"45.059,5.907";Maitron
+Bourg-d’Oisans;La Paute;1944-08-13;Exécutions;"Nông CHAN-DINH (soldat indochinois du maquis)";"45.055,6.030";Maitron
+Bourg-d’Oisans;La Paute;1944-08-14;Exécutions;"Lucien NATANSON";"45.055,6.030";Maitron
+Bourg-d’Oisans;Salle des fêtes;1944-08-14;Exécutions;"Pierre WEBER";"45.055,6.028";Maitron
+Bourg-d’Oisans;Les Ilats;1944-08-15;Exécutions;"Bernard BRANDSILBER; Stanislas HALKA; Adam LELIWA-KOPYTINSKI; Stefan MARTZICHEWSKI; Maurice UNGER";"45.061,6.025";Maitron
+Séchilienne;Les Clots;1944-08-12;Exécutions;"Hippolyte BOUJARD; Marcel BOUJARD; Benjamin KLEINBERG; Léonard MATHIEU; Jean REY";"45.056,5.838";Maitron
 Séchilienne;Les Rivoirands;1944-08-22;Combats;"Charles MERCIOL; Pedro MARTINEZ-ALONZO";"45.05575,5.79536";Maitron
 Séchilienne;Croix du Mottet;1944-08-22;Combats;"Alpenjäger vs FFI - tirs amis corrigés - repli allemand stoppé";"45.050194,5.789038";Lanvin-Lespiau
+Vizille;Château (place);1944-08-22;Combats;"Henri JOURDAN; Auguste MACHOT; Alfred SOUTISON";"45.078,5.773";Maitron
+Claix;Les Peyrouses;1944-08-11;Exécutions;"Paulette VERDON";"45.136,5.675";Maitron
+Claix;Fort de Comboire (Malhivert);1944-07-20;Exécutions;"Jean BOURREL; Georges DOURET; Georges JOURDAN (gendarmerie)";"45.138,5.678";Maitron
+Claix;Commune;1944-07-27;Exécutions;"Pierre LAVASTRE (6e BCA, prisonnier exécuté)";"45.136,5.676";Maitron
+Allemont;Fonderie;1944-08-15;Exécutions;"Albert ANGELIER; Léon SAVIOUX";"45.129,6.080";Maitron
+Allemont;Les Granges;1944-08-16;Exécutions;"Erminio BELLOTTO; André LE BARBU; Raymonde LE BARBU (née DAILLENCOURT); Roger OLLIVIER; Louise OLLIVIER (née TAIX)";"45.140,6.070";Maitron
+Valbonnais;Pont du Prêtre;1944-08-09;Combats;"Paul DEMESSE; Ben Ali NACER; Séraphin ODDOUX; Antoine TREUILLE; Georges WEIL";"44.924,5.920";Maitron
+Valbonnais;Pont du Prêtre;1944-08-10;Combats;"Armand CASU";"44.924,5.920";Maitron
+Valbonnais;Pont du Prêtre;1944-08-11;Combats;"Leyzor KON; Paul PICHAND; Fernand TERRAS-BLANC";"44.924,5.920";Maitron
+Champ-sur-Drac;Pont de la Romanche (face usine de Jarrie);1944-08-21;Combats;"Combats avec pertes non identifiées";"45.08790,5.73072";Témoignages locaux
