@@ -20,7 +20,7 @@
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
-    // --- Mini parseur CSV qui respecte les guillemets ---
+    // --- Mini parseur CSV robuste ---
     function parseCSV(text) {
       const rows = [];
       const lines = text.split(/\r?\n/);
@@ -89,10 +89,6 @@
             } else {
               console.warn("Coordonnées invalides:", row.Coordonnees, row);
             }
-            data.forEach(row => {
-  console.log("Lecture ligne:", row);  // DEBUG
-  if (row.Coordonnees) {
-    ...
           }
         });
       });
