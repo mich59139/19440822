@@ -3,11 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <title>Carte – Août 1944</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     html, body { height: 100%; margin: 0; }
+    /* Prend en compte les "safe areas" iOS (encoches) */
+    body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
     #map { height: 100vh; width: 100%; }
 
     .legend {
@@ -28,29 +31,45 @@
       shape-rendering: geometricPrecision;
     }
 
-    /* Met le zoom (+/–) et notre sélecteur sur la même ligne (coin haut-gauche) */
+    /* ========= Mobile friendly : place le select à côté du zoom ========= */
     .leaflet-top.leaflet-left {
       display: flex;
       gap: 8px;
       align-items: flex-start;
-      flex-wrap: wrap; /* au cas où, sur petits écrans */
+      flex-wrap: wrap; /* si l'espace manque, passe à la ligne */
+      padding-top: env(safe-area-inset-top);
+      padding-left: env(safe-area-inset-left);
     }
 
-    /* Style compact pour la liste "Communes" à côté du zoom */
+    /* Grossit un peu les boutons + / – pour le doigt */
+    .leaflet-bar a {
+      width: 40px; height: 40px; line-height: 40px;
+      font-size: 22px;
+    }
+
+    /* Bloc compact pour la liste "Communes" */
     .communes-inline {
       background: #fff;
       padding: 4px 6px;
-      border-radius: 6px;
+      border-radius: 8px;
       box-shadow: 0 1px 5px rgba(0,0,0,.3);
-      font: 13px/1.3 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      max-width: 260px;
+      font: 16px/1.3 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; /* 16px évite le zoom iOS */
+      max-width: min(60vw, 320px);
     }
     .communes-inline select {
       border: 1px solid #d0d7de;
-      border-radius: 4px;
-      padding: 4px 6px;
+      border-radius: 6px;
+      padding: 8px 10px; /* touch target généreuse */
       background: #fff;
       max-width: 100%;
+      font-size: 16px; /* anti-zoom iOS */
+    }
+
+    /* Sur très petits écrans, on empile sous le zoom, et on élargit le select */
+    @media (max-width: 480px) {
+      .leaflet-top.leaflet-left { flex-direction: column; align-items: stretch; gap: 6px; }
+      .communes-inline { max-width: 85vw; }
+      .legend { font-size: 13px; }
     }
   </style>
   <!-- évite le 404 favicon en local -->
@@ -64,7 +83,7 @@
 
   <script>
     // ============ Carte ============
-    const map = L.map('map').setView([45.05, 5.83], 11);
+    const map = L.map('map', { zoomControl: true }).setView([45.05, 5.83], 11);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '© OpenStreetMap'
@@ -182,7 +201,7 @@
           addToCommuneIndex(row["Commune"], marker);
         });
 
-        buildCommunesControl();   // liste déroulante à côté du zoom
+        buildCommunesControl();   // liste déroulante collée au zoom
 
         // Hash URL
         const h = parseHash();
@@ -218,7 +237,7 @@
           c.innerHTML = `
             <label for="communeSelect" class="sr-only" style="position:absolute;left:-9999px;">Communes</label>
             <select id="communeSelect" aria-label="Communes">
-              <option value="">— Tout voir ou Choix de la commune —</option>
+              <option value="">— Tout voir —</option>
               ${communes.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')}
             </select>
           `;
