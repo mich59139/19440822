@@ -17,16 +17,17 @@
       border-radius: 6px;
       box-shadow: 0 0 12px rgba(0,0,0,.15);
     }
-    /* Supprime l'effet de sélection de texte sur les icônes */
+    /* Icônes Leaflet propres */
     .leaflet-div-icon { background: transparent; border: none; user-select: none; }
-
-    /* >>> AJOUT pour des traits nets, sans épaississement au zoom <<< */
+    /* Traits fins, nets, non "boudinés" au zoom */
     .icon-swords svg, .icon-cross svg { display:block; }
     .icon-swords path,
     .icon-cross path, .icon-cross rect {
       vector-effect: non-scaling-stroke;
       shape-rendering: geometricPrecision;
     }
+    /* Forcer l'SVG de la croix à occuper 100% de l'icône (18x18) */
+    .icon-cross svg { width: 100%; height: 100%; }
   </style>
 </head>
 <body>
@@ -44,16 +45,15 @@
     }).addTo(map);
 
     // --------- Icônes SVG embarquées (aucune ressource externe) ----------
- 
+    // Croix (réduite visuellement — on fixera la taille via iconSize)
     const svgCross = `
-  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M10 2h4v6h6v4h-6v10h-4V12H4V8h6z" fill="#c1121f"/>
-    <rect x="9.5" y="1.5" width="5" height="21" fill="none" stroke="#7a0a12" stroke-width="1"/>
-    <rect x="1.5" y="7.5" width="21" height="5" fill="none" stroke="#7a0a12" stroke-width="1"/>
-  </svg>`;
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M10 2h4v6h6v4h-6v10h-4V12H4V8h6z" fill="#c1121f"/>
+        <rect x="9.5" y="1.5" width="5" height="21" fill="none" stroke="#7a0a12" stroke-width="1"/>
+        <rect x="1.5" y="7.5" width="21" height="5" fill="none" stroke="#7a0a12" stroke-width="1"/>
+      </svg>`;
 
-    /* >>> REMPLACÉ : nouvelle icône ⚔️ avec traits fins et gardes en losange,
-       vector-effect sur chaque path pour éviter l'effet "pâté" <<< */
+    // Épées (traits fins + vector-effect)
     const svgSwords = `
       <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none">
         <g stroke="#0b2545" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -68,9 +68,30 @@
         </g>
       </svg>`;
 
-    const iconCross  = L.divIcon({ className: 'icon-cross',  html: svgCross,  iconSize: [26,26], iconAnchor: [13,26], popupAnchor: [0,-22] });
-    const iconSwords = L.divIcon({ className: 'icon-swords', html: svgSwords, iconSize: [24,24], iconAnchor: [12,24], popupAnchor: [0,-22] });
-    const iconDot    = L.divIcon({ className: 'icon-dot',    html: '<svg width="20" height="20"><circle cx="10" cy="10" r="6" fill="#222"/></svg>', iconSize: [20,20], iconAnchor: [10,20], popupAnchor: [0,-18] });
+    // --------- Création des icônes ----------
+    const iconCross  = L.divIcon({
+      className: 'icon-cross',
+      html: svgCross,
+      iconSize: [18, 18],     // ⇦ croix plus petite
+      iconAnchor: [9, 18],    // base au "sol"
+      popupAnchor: [0, -16]
+    });
+
+    const iconSwords = L.divIcon({
+      className: 'icon-swords',
+      html: svgSwords,
+      iconSize: [24, 24],
+      iconAnchor: [12, 24],
+      popupAnchor: [0, -22]
+    });
+
+    const iconDot = L.divIcon({
+      className: 'icon-dot',
+      html: '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6" fill="#222"/></svg>',
+      iconSize: [20, 20],
+      iconAnchor: [10, 20],
+      popupAnchor: [0, -18]
+    });
 
     function getIcon(categorie = "") {
       const c = (categorie || "").toLowerCase();
