@@ -6,6 +6,14 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
     #map { height: 100vh; width: 100%; }
+    .legend {
+      background: white;
+      padding: 6px 10px;
+      font-size: 14px;
+      line-height: 18px;
+      border-radius: 5px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
   </style>
 </head>
 <body>
@@ -65,14 +73,14 @@
 
       if (categorie.toLowerCase().includes("exécution") || categorie.toLowerCase().includes("victime")) {
         return L.icon({
-          iconUrl: "https://cdn-icons-png.flaticon.com/512/484/484662.png", // cercle rouge
-          iconSize: [26, 26]
+          iconUrl: "https://cdn-icons-png.flaticon.com/512/535/535234.png", // ✝️ croix
+          iconSize: [22, 22]
         });
       }
 
       if (categorie.toLowerCase().includes("combat")) {
         return L.icon({
-          iconUrl: "https://cdn-icons-png.flaticon.com/512/1076/1076877.png", // icône épée
+          iconUrl: "https://cdn-icons-png.flaticon.com/512/1076/1076877.png", // ⚔️ épées
           iconSize: [28, 28]
         });
       }
@@ -123,6 +131,19 @@
           }
         });
       });
+
+    // --- Légende ---
+    const legend = L.control({position: 'bottomright'});
+    legend.onAdd = function () {
+      const div = L.DomUtil.create('div', 'legend');
+      div.innerHTML = `
+        <b>Légende</b><br>
+        <img src="https://cdn-icons-png.flaticon.com/512/535/535234.png" width="16"> Victimes / Exécutions<br>
+        <img src="https://cdn-icons-png.flaticon.com/512/1076/1076877.png" width="16"> Combats
+      `;
+      return div;
+    };
+    legend.addTo(map);
   </script>
 </body>
 </html>
