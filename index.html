@@ -18,7 +18,15 @@
       box-shadow: 0 0 12px rgba(0,0,0,.15);
     }
     /* Supprime l'effet de sélection de texte sur les icônes */
-    .leaflet-div-icon { background: transparent; border: none; }
+    .leaflet-div-icon { background: transparent; border: none; user-select: none; }
+
+    /* >>> AJOUT pour des traits nets, sans épaississement au zoom <<< */
+    .icon-swords svg, .icon-cross svg { display:block; }
+    .icon-swords path,
+    .icon-cross path, .icon-cross rect {
+      vector-effect: non-scaling-stroke;
+      shape-rendering: geometricPrecision;
+    }
   </style>
 </head>
 <body>
@@ -42,24 +50,26 @@
         <rect x="9.5" y="1.5" width="5" height="21" fill="none" stroke="#7a0a12" stroke-width="1"/>
         <rect x="1.5" y="7.5" width="21" height="5" fill="none" stroke="#7a0a12" stroke-width="1"/>
       </svg>`;
+
+    /* >>> REMPLACÉ : nouvelle icône ⚔️ avec traits fins et gardes en losange,
+       vector-effect sur chaque path pour éviter l'effet "pâté" <<< */
     const svgSwords = `
-      <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
-        <g stroke="#0b2545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
-          <!-- lames -->
-          <path d="M4 5l7 7" />
-          <path d="M20 5l-7 7" />
-          <!-- poignées -->
-          <path d="M3 7l3-3" />
-          <path d="M21 7l-3-3" />
-          <!-- gardes -->
-          <path d="M7 9l-2 2" />
-          <path d="M17 9l2 2" />
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+        <g stroke="#0b2545" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <!-- lame gauche -->
+          <path d="M4 5 L12 13" vector-effect="non-scaling-stroke"/>
+          <!-- garde/poignée gauche -->
+          <path d="M7 4 L4 7 L7 10 L10 7 Z" vector-effect="non-scaling-stroke"/>
+          <!-- lame droite -->
+          <path d="M20 5 L12 13" vector-effect="non-scaling-stroke"/>
+          <!-- garde/poignée droite -->
+          <path d="M17 4 L20 7 L17 10 L14 7 Z" vector-effect="non-scaling-stroke"/>
         </g>
       </svg>`;
 
-    const iconCross = L.divIcon({ className: 'icon-cross', html: svgCross, iconSize: [26,26], iconAnchor: [13,26], popupAnchor: [0,-22] });
-    const iconSwords = L.divIcon({ className: 'icon-swords', html: svgSwords, iconSize: [28,28], iconAnchor: [14,28], popupAnchor: [0,-24] });
-    const iconDot = L.divIcon({ className: 'icon-dot', html: '<svg width="20" height="20"><circle cx="10" cy="10" r="6" fill="#222"/></svg>', iconSize: [20,20], iconAnchor: [10,20], popupAnchor: [0,-18] });
+    const iconCross  = L.divIcon({ className: 'icon-cross',  html: svgCross,  iconSize: [26,26], iconAnchor: [13,26], popupAnchor: [0,-22] });
+    const iconSwords = L.divIcon({ className: 'icon-swords', html: svgSwords, iconSize: [24,24], iconAnchor: [12,24], popupAnchor: [0,-22] });
+    const iconDot    = L.divIcon({ className: 'icon-dot',    html: '<svg width="20" height="20"><circle cx="10" cy="10" r="6" fill="#222"/></svg>', iconSize: [20,20], iconAnchor: [10,20], popupAnchor: [0,-18] });
 
     function getIcon(categorie = "") {
       const c = (categorie || "").toLowerCase();
