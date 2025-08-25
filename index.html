@@ -10,35 +10,69 @@
 </head>
 <body>
   <div id="map"></div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+    // Initialisation carte
     const map = L.map('map').setView([45.07, 5.8], 11);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
-    // Chargement brut du CSV
+    // --- Mini parseur CSV qui respecte les guillemets ---
+    function parseCSV(text) {
+      const rows = [];
+      const lines = text.split(/\r?\n/);
+
+      for (let line of lines) {
+        if (!line.trim()) continue;
+
+        const cols = [];
+        let current = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+
+          if (char === '"' && line[i + 1] === '"') {
+            current += '"'; // gérer les guillemets doubles
+            i++;
+          } else if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ';' && !inQuotes) {
+            cols.push(current);
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        cols.push(current);
+        rows.push(cols);
+      }
+
+      return rows;
+    }
+
+    // --- Lecture du CSV ---
     fetch("data/victimes.csv?cb=" + Date.now())
       .then(r => r.text())
       .then(txt => {
-        const lines = txt.trim().split("\n");
-        const headers = lines[0].split(";");
-        const data = lines.slice(1).map(line => {
-          const cols = line.split(";");
-          return {
-            Commune: cols[0],
-            Lieu: cols[1],
-            Date: cols[2],
-            Categorie: cols[3],
-            Victimes: cols[4],
-            Coordonnees: cols[5],
-            Source: cols[6]
-          };
-        });
+        const rows = parseCSV(txt);
+        const headers = rows[0];
+        const data = rows.slice(1).map(cols => ({
+          Commune: cols[0],
+          Lieu: cols[1],
+          Date: cols[2],
+          Categorie: cols[3],
+          Victimes: cols[4],
+          Coordonnees: cols[5],
+          Source: cols[6]
+        }));
 
         console.log("Lignes lues :", data.length);
 
+        // --- Ajout des marqueurs ---
         data.forEach(row => {
           if (row.Coordonnees) {
             const [lat, lng] = row.Coordonnees.replace(/"/g,"").split(",").map(Number);
@@ -53,7 +87,7 @@
               `;
               L.marker([lat, lng]).addTo(map).bindPopup(popup);
             } else {
-              console.warn("Coordonnées invalides:", row.Coordonnees);
+              console.warn("Coordonnées invalides:", row.Coordonnees, row);
             }
           }
         });
