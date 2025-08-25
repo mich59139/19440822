@@ -28,7 +28,7 @@
       shape-rendering: geometricPrecision;
     }
 
-    /* ===== Panneaux UI (seulement des listes déroulantes) ===== */
+    /* Panneau Communes (liste seule) */
     .ui-panel {
       background:#fff;
       padding:10px;
@@ -41,10 +41,10 @@
     .row + .row { margin-top:8px; }
     .ui-panel select {
       padding:6px 8px; border:1px solid #ddd; border-radius:6px; background:#fff;
+      flex:1 1 auto; min-width:220px;
     }
-    .grow { flex:1 1 auto; min-width:220px; }
   </style>
-  <!-- (facultatif) évite le 404 favicon en local -->
+  <!-- évite le 404 favicon en local -->
   <link rel="icon" href="data:," />
 </head>
 <body>
@@ -54,14 +54,14 @@
   <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
 
   <script>
-    // --------- Carte ----------
+    // ============ Carte ============
     const map = L.map('map').setView([45.05, 5.83], 11);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // --------- Icônes SVG (on garde TES icônes) ----------
+    // ============ Icônes (on garde TES icônes) ============
     const svgCross = `
       <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M10 2h4v6h6v4h-6v10h-4V12H4V8h6z" fill="#c1121f"/>
@@ -91,56 +91,15 @@
       return iconDot;                                                            // défaut
     }
 
-    // --------- Index & données ---------
+    // ============ Données & index ============
     const allMarkers = [];
     const communeIndex = new Map(); // "Commune" -> { markers:[], bounds:L.LatLngBounds }
-    const points = [];              // {marker, latlng, date:Date|null, commune}
 
-    // Utils (déclarés tôt)
     function escapeHtml(s) {
       return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
-    }
-    function toISODate(d) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth()+1).padStart(2,'0');
-      const da = String(d.getDate()).padStart(2,'0');
-      return `${y}-${m}-${da}`;
-    }
-    function parseISODate(iso) {
-      const m = String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (!m) return null;
-      return new Date(+m[1], +m[2]-1, +m[3]);
-    }
-    function formatFR(iso) {
-      const d = parseISODate(iso);
-      return d ? d.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) : iso;
-    }
-    // Parse dates FR variées
-    function parseEventDate(raw) {
-      if (!raw) return null;
-      let s = String(raw).trim();
-
-      let m = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/); // ISO YYYY-MM-DD
-      if (m) return new Date(+m[1], +m[2]-1, +m[3]);
-
-      m = s.match(/^(\d{4})(\d{2})(\d{2})$/); // YYYYMMDD
-      if (m) return new Date(+m[1], +m[2]-1, +m[3]);
-
-      m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/); // JJ/MM/AAAA
-      if (m) return new Date(+m[3], +m[2]-1, +m[1]);
-
-      const months = { janvier:1, fevrier:2, février:2, mars:3, avril:4, mai:5, juin:6, juillet:7,
-        aout:8, août:8, septembre:9, octobre:10, novembre:11, decembre:12, décembre:12 };
-      const sNorm = s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      m = sNorm.match(/^(\d{1,2})\s+([a-z]+)\s+(\d{4})$/); // "22 août 1944"
-      if (m && months[m[2]] != null) return new Date(+m[3], months[m[2]]-1, +m[1]);
-
-      return null;
     }
 
     function addToCommuneIndex(commune, marker) {
@@ -152,8 +111,8 @@
         communeIndex.set(key, entry);
       }
       entry.markers.push(marker);
-      const mlatlng = marker.getLatLng();
-      entry.bounds = entry.bounds ? entry.bounds.extend(mlatlng) : L.latLngBounds(mlatlng, mlatlng);
+      const ll = marker.getLatLng();
+      entry.bounds = entry.bounds ? entry.bounds.extend(ll) : L.latLngBounds(ll, ll);
     }
 
     function zoomToCommune(name) {
@@ -174,7 +133,7 @@
       setHash({});
     }
 
-    // --------- Chargement CSV ----------
+    // ============ Chargement CSV ============
     Papa.parse("data/victimes.csv?cb=" + Date.now(), {
       download: true,
       header: true,
@@ -197,7 +156,6 @@
             return;
           }
 
-          const dateObj = parseEventDate(row["Date"]);
           const popup = `
             <b>${row["Commune"] || ""}</b><br/>
             <i>${row["Lieu"] || ""}</i><br/>
@@ -213,21 +171,18 @@
 
           allMarkers.push(marker);
           addToCommuneIndex(row["Commune"], marker);
-          points.push({ marker, latlng: L.latLng(lat, lng), date: dateObj, commune: row["Commune"] || "" });
         });
 
-        buildCommunesControl();   // liste déroulante
-        buildDatesControl();      // 2 listes déroulantes (Du/Au)
+        buildCommunesControl();   // liste déroulante Communes
 
         // Hash URL
         const h = parseHash();
-        if (h.dateFrom || h.dateTo) zoomByDateRange(h.dateFrom, h.dateTo, {updateInputs:true});
-        else if (h.commune) zoomToCommune(h.commune);
+        if (h.commune) zoomToCommune(h.commune);
       },
       error: (err) => console.error("Erreur PapaParse:", err)
     });
 
-    // --------- Légende ----------
+    // ============ Légende ============
     const legend = L.control({ position: "bottomright" });
     legend.onAdd = function () {
       const div = L.DomUtil.create("div", "legend");
@@ -242,9 +197,7 @@
     };
     legend.addTo(map);
 
-    // =========================
-    //  Contrôle "Communes" (liste)
-    // =========================
+    // ============ Contrôle "Communes" ============
     function buildCommunesControl() {
       const communes = Array.from(communeIndex.keys())
         .sort((a,b) => a.localeCompare(b, 'fr', { sensitivity:'base' }));
@@ -256,7 +209,7 @@
           c.innerHTML = `
             <div class="row">
               <label for="communeSelect"><strong>Communes</strong></label>
-              <select id="communeSelect" class="grow">
+              <select id="communeSelect">
                 <option value="">— Tout voir —</option>
                 ${communes.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')}
               </select>
@@ -271,7 +224,7 @@
             if (name) zoomToCommune(name); else zoomAll();
           });
 
-          // refléter le hash
+          // refléter le hash (si partage d’URL)
           const h = parseHash();
           if (h.commune && communes.includes(h.commune)) sel.value = h.commune;
 
@@ -281,126 +234,18 @@
       map.addControl(new CommunesControl());
     }
 
-    // =========================
-    //  Contrôle "Dates" (listes Du/Au)
-    // =========================
-    function buildDatesControl() {
-      // Dates valides
-      const dated = points.filter(p => p.date instanceof Date && !isNaN(p.date));
-      if (!dated.length) return;
-
-      // Jours uniques
-      const days = Array.from(new Set(dated.map(p => toISODate(p.date)))).sort();
-
-      const minISO = days[0];
-      const maxISO = days[days.length - 1];
-
-      const DatesControl = L.Control.extend({
-        options: { position: 'topright' },
-        onAdd: function() {
-          const c = L.DomUtil.create('div', 'ui-panel');
-          c.innerHTML = `
-            <div class="row">
-              <label for="dateFromSelect"><strong>Du</strong></label>
-              <select id="dateFromSelect">
-                <option value="">Toutes dates</option>
-                ${days.map(d => `<option value="${d}">${escapeHtml(formatFR(d))}</option>`).join('')}
-              </select>
-              <label for="dateToSelect"><strong>Au</strong></label>
-              <select id="dateToSelect">
-                <option value="">Toutes dates</option>
-                ${days.map(d => `<option value="${d}">${escapeHtml(formatFR(d))}</option>`).join('')}
-              </select>
-            </div>
-          `;
-          L.DomEvent.disableClickPropagation(c);
-          L.DomEvent.disableScrollPropagation(c);
-
-          const fromSel = c.querySelector('#dateFromSelect');
-          const toSel   = c.querySelector('#dateToSelect');
-
-          // Valeurs par défaut : min → max
-          fromSel.value = minISO;
-          toSel.value   = maxISO;
-
-          const onChange = () => {
-            let f = fromSel.value || '';
-            let t = toSel.value   || '';
-            if (!f && !t) { zoomAll(); return; }
-
-            // Normaliser : si une borne manque, utiliser min/max
-            if (!f) f = minISO;
-            if (!t) t = maxISO;
-
-            // Corriger l'ordre si besoin
-            if (f > t) { const tmp = f; f = t; t = tmp; fromSel.value = f; toSel.value = t; }
-
-            zoomByDateRange(f, t, {updateInputs:false});
-          };
-
-          fromSel.addEventListener('change', onChange);
-          toSel  .addEventListener('change', onChange);
-
-          // refléter hash (si présent)
-          const h = parseHash();
-          if (h.dateFrom && days.includes(h.dateFrom)) fromSel.value = h.dateFrom;
-          if (h.dateTo   && days.includes(h.dateTo))   toSel.value   = h.dateTo;
-
-          // Premier zoom par défaut (si hash présent)
-          onChange();
-
-          return c;
-        }
-      });
-      map.addControl(new DatesControl());
-    }
-
-    // --------- Zoom par période ----------
-    function zoomByDateRange(fromISO, toISO, {updateInputs=true}={}) {
-      const from = parseISODate(fromISO) || null;
-      const to   = parseISODate(toISO)   || null;
-      if (!from && !to) return;
-
-      const start = from ? new Date(from.getFullYear(), from.getMonth(), from.getDate(), 0,0,0) : null;
-      const end   = to   ? new Date(to.getFullYear(),   to.getMonth(),   to.getDate(),   23,59,59) : null;
-
-      const inRange = points.filter(p => {
-        if (!(p.date instanceof Date) || isNaN(p.date)) return false;
-        const t = p.date.getTime();
-        if (start && t < start.getTime()) return false;
-        if (end   && t > end.getTime())   return false;
-        return true;
-      });
-
-      if (!inRange.length) {
-        console.warn("Aucun point dans cette période.");
-        return;
-      }
-
-      const bounds = L.featureGroup(inRange.map(p => p.marker)).getBounds();
-      map.fitBounds(bounds.pad(0.25), { animate: true });
-
-      setHash({ dateFrom: toISODate(start || inRange[0].date), dateTo: toISODate(end || inRange[inRange.length-1].date) });
-    }
-
-    // --------- Hash URL ---------
+    // ============ Hash URL ============
     function parseHash() {
       const out = {};
       const h = location.hash.replace(/^#/, '');
       if (!h) return out;
       const params = new URLSearchParams(h);
       if (params.has('commune')) out.commune = decodeURIComponent(params.get('commune'));
-      if (params.has('dateFrom')) out.dateFrom = params.get('dateFrom');
-      if (params.has('dateTo'))   out.dateTo   = params.get('dateTo');
       return out;
     }
-    function setHash({ commune, dateFrom, dateTo }) {
+    function setHash({ commune }) {
       const p = new URLSearchParams();
       if (commune) p.set('commune', encodeURIComponent(commune));
-      if (dateFrom && dateTo) {
-        p.set('dateFrom', dateFrom);
-        p.set('dateTo',   dateTo);
-      }
       const hash = p.toString();
       location.hash = hash ? '#' + hash : '';
     }
